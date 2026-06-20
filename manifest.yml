@@ -1,0 +1,9 @@
+---
+applications:
+  - name: static-btp-app
+    memory: 64M
+    disk_quota: 128M
+    instances: 1
+    buildpacks:
+      - staticfile_buildpack
+    path: .

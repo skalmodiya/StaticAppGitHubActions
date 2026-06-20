@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>My SAP BTP App</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: "72", "72full", Arial, Helvetica, sans-serif;
+      background: #f5f6fa;
+      color: #32363a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 8px;
+      box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      padding: 3rem 2.5rem;
+      max-width: 480px;
+      width: 100%;
+      text-align: center;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #0070f2;
+      color: #fff;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 0.25rem 0.75rem;
+      border-radius: 999px;
+      margin-bottom: 1.25rem;
+    }
+
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 700;
+      margin-bottom: 0.75rem;
+      color: #0b3d91;
+    }
+
+    p {
+      color: #6a6d70;
+      line-height: 1.6;
+      margin-bottom: 1.5rem;
+    }
+
+    .counter-box {
+      background: #f0f4ff;
+      border-radius: 6px;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .counter-label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      color: #8396a8;
+      margin-bottom: 0.4rem;
+    }
+
+    .counter-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: #0070f2;
+    }
+
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      justify-content: center;
+    }
+
+    button {
+      border: none;
+      border-radius: 6px;
+      padding: 0.6rem 1.4rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background 0.15s, transform 0.1s;
+    }
+
+    button:active { transform: scale(0.97); }
+
+    .btn-primary { background: #0070f2; color: #fff; }
+    .btn-primary:hover { background: #0057c2; }
+
+    .btn-secondary { background: #e8ecf0; color: #32363a; }
+    .btn-secondary:hover { background: #d1d9e0; }
+
+    footer {
+      margin-top: 2.5rem;
+      font-size: 0.78rem;
+      color: #adb5bd;
+    }
+
+    footer a { color: #0070f2; text-decoration: none; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <span class="badge">SAP BTP Cloud Foundry</span>
+    <h1>Hello, BTP!</h1>
+    <p>A minimal static app deployed automatically via <strong>GitHub Actions</strong> to SAP BTP Cloud Foundry.</p>
+
+    <div class="counter-box">
+      <div class="counter-label">Button clicks</div>
+      <div class="counter-value" id="count">0</div>
+    </div>
+
+    <div class="btn-row">
+      <button class="btn-primary" onclick="increment()">Click me</button>
+      <button class="btn-secondary" onclick="reset()">Reset</button>
+    </div>
+  </div>
+
+  <footer>
+    Deployed with GitHub Actions &mdash;
+    <a href="https://github.com" target="_blank">View source on GitHub</a>
+  </footer>
+
+  <script>
+    let count = 0;
+    function increment() {
+      count++;
+      document.getElementById('count').textContent = count;
+    }
+    function reset() {
+      count = 0;
+      document.getElementById('count').textContent = count;
+    }
+  </script>
+</body>
+</html>

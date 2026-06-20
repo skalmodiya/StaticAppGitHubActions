@@ -1,0 +1,48 @@
+name: Deploy to SAP BTP Cloud Foundry
+
+on:
+  push:
+    branches:
+      - main          # trigger on every push to main
+
+  workflow_dispatch:  # allow manual trigger from GitHub UI
+
+jobs:
+  deploy:
+    name: CF Push
+    runs-on: ubuntu-latest
+
+    steps:
+      # ── 1. Checkout source ──────────────────────────────────────────────────
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # ── 2. Install CF CLI ───────────────────────────────────────────────────
+      - name: Install Cloud Foundry CLI (v8)
+        run: |
+          curl -fsSL "https://packages.cloudfoundry.org/stable?release=linux64-binary&version=v8&source=github" \
+            -o /tmp/cf-cli.tgz
+          tar -xzf /tmp/cf-cli.tgz -C /tmp
+          sudo mv /tmp/cf8 /usr/local/bin/cf
+          cf version
+
+      # ── 3. Authenticate to SAP BTP CF ───────────────────────────────────────
+      - name: Authenticate with SAP BTP
+        env:
+          CF_API:      ${{ secrets.CF_API }}
+          CF_USERNAME: ${{ secrets.CF_USERNAME }}
+          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
+          CF_ORG:      ${{ secrets.CF_ORG }}
+          CF_SPACE:    ${{ secrets.CF_SPACE }}
+        run: |
+          cf api "$CF_API"
+          cf auth "$CF_USERNAME" "$CF_PASSWORD"
+          cf target -o "$CF_ORG" -s "$CF_SPACE"
+
+      # ── 4. Deploy ───────────────────────────────────────────────────────────
+      - name: Deploy static app
+        run: cf push --strategy rolling
+
+      # ── 5. Print URL ────────────────────────────────────────────────────────
+      - name: Show app URL
+        run: cf app static-btp-app

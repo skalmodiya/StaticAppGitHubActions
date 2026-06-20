@@ -1,0 +1,8 @@
+.git
+.github
+.gitignore
+.cfignore
+*.md
+*.log
+.DS_Store
+Thumbs.db
