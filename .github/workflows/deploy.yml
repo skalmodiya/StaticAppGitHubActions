@@ -26,19 +26,24 @@ jobs:
           sudo mv /tmp/cf8 /usr/local/bin/cf
           cf version
 
-      # ── 3. Authenticate via oauth token (for SSO accounts) ─────────────────
+      # ── 3. Authenticate via CF config + fresh token (for SSO accounts) ─────
       - name: Authenticate with SAP BTP
         env:
-          CF_API:   ${{ secrets.CF_API }}
-          CF_TOKEN: ${{ secrets.CF_TOKEN }}
-          CF_ORG:   ${{ secrets.CF_ORG }}
-          CF_SPACE: ${{ secrets.CF_SPACE }}
+          CF_TOKEN:  ${{ secrets.CF_TOKEN }}
+          CF_CONFIG: ${{ secrets.CF_CONFIG }}
+          CF_ORG:    ${{ secrets.CF_ORG }}
+          CF_SPACE:  ${{ secrets.CF_SPACE }}
         run: |
-          cf api "$CF_API"
-          # CF CLI v8 on Linux stores config in ~/.config/cf/
           mkdir -p ~/.config/cf
-          printf '{"Target":"%s","AccessToken":"%s","RefreshToken":"","OrganizationFields":{"Name":"%s"},"SpaceFields":{"Name":"%s"}}' \
-            "$CF_API" "$CF_TOKEN" "$CF_ORG" "$CF_SPACE" > ~/.config/cf/config.json
+          # Restore full CF config from secret, then inject fresh access token
+          echo "$CF_CONFIG" > ~/.config/cf/config.json
+          python3 -c "
+import json, os, sys
+path = os.path.expanduser('~/.config/cf/config.json')
+cfg = json.load(open(path))
+cfg['AccessToken'] = os.environ['CF_TOKEN']
+open(path, 'w').write(json.dumps(cfg))
+"
           cf target -o "$CF_ORG" -s "$CF_SPACE"
 
       # ── 4. Deploy ───────────────────────────────────────────────────────────
