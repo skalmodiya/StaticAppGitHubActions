@@ -26,17 +26,18 @@ jobs:
           sudo mv /tmp/cf8 /usr/local/bin/cf
           cf version
 
-      # ── 3. Authenticate to SAP BTP CF ───────────────────────────────────────
+      # ── 3. Authenticate via oauth token (for SSO accounts) ─────────────────
       - name: Authenticate with SAP BTP
         env:
-          CF_API:      ${{ secrets.CF_API }}
-          CF_USERNAME: ${{ secrets.CF_USERNAME }}
-          CF_PASSWORD: ${{ secrets.CF_PASSWORD }}
-          CF_ORG:      ${{ secrets.CF_ORG }}
-          CF_SPACE:    ${{ secrets.CF_SPACE }}
+          CF_API:   ${{ secrets.CF_API }}
+          CF_TOKEN: ${{ secrets.CF_TOKEN }}
+          CF_ORG:   ${{ secrets.CF_ORG }}
+          CF_SPACE: ${{ secrets.CF_SPACE }}
         run: |
           cf api "$CF_API"
-          cf auth "$CF_USERNAME" "$CF_PASSWORD"
+          mkdir -p ~/.cf
+          printf '{"Target":"%s","AccessToken":"%s","RefreshToken":"","OrganizationFields":{"Name":"%s"},"SpaceFields":{"Name":"%s"}}' \
+            "$CF_API" "$CF_TOKEN" "$CF_ORG" "$CF_SPACE" > ~/.cf/config.json
           cf target -o "$CF_ORG" -s "$CF_SPACE"
 
       # ── 4. Deploy ───────────────────────────────────────────────────────────
