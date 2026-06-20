@@ -26,7 +26,16 @@ jobs:
           sudo mv /tmp/cf8 /usr/local/bin/cf
           cf version
 
-      # ── 3. Authenticate via CF config + fresh token (for SSO accounts) ─────
+      # ── 3. Debug: find where CF CLI stores its config ───────────────────────
+      - name: Find CF config path
+        run: |
+          cf api https://dummy.example.com || true
+          echo "--- home is: $HOME"
+          find "$HOME" -name "config.json" 2>/dev/null | grep -i cf || echo "no cf config found"
+          ls -la "$HOME/.config/cf/" 2>/dev/null || echo "~/.config/cf/ does not exist"
+          ls -la "$HOME/.cf/" 2>/dev/null || echo "~/.cf/ does not exist"
+
+      # ── 4. Authenticate via CF config + fresh token (for SSO accounts) ─────
       - name: Authenticate with SAP BTP
         env:
           CF_TOKEN:  ${{ secrets.CF_TOKEN }}
@@ -34,17 +43,19 @@ jobs:
           CF_ORG:    ${{ secrets.CF_ORG }}
           CF_SPACE:  ${{ secrets.CF_SPACE }}
         run: |
-          mkdir -p ~/.config/cf
-          echo "$CF_CONFIG" > ~/.config/cf/config.json
-          jq --arg token "$CF_TOKEN" '.AccessToken = $token' ~/.config/cf/config.json \
+          CF_CONFIG_PATH=$(find "$HOME" -name "config.json" 2>/dev/null | grep -i cf | head -1)
+          echo "CF config path: $CF_CONFIG_PATH"
+          mkdir -p "$(dirname "$CF_CONFIG_PATH")"
+          echo "$CF_CONFIG" > "$CF_CONFIG_PATH"
+          jq --arg token "$CF_TOKEN" '.AccessToken = $token' "$CF_CONFIG_PATH" \
             > /tmp/cf_config_patched.json
-          mv /tmp/cf_config_patched.json ~/.config/cf/config.json
+          mv /tmp/cf_config_patched.json "$CF_CONFIG_PATH"
           cf target -o "$CF_ORG" -s "$CF_SPACE"
 
-      # ── 4. Deploy ───────────────────────────────────────────────────────────
+      # ── 5. Deploy ───────────────────────────────────────────────────────────
       - name: Deploy static app
         run: cf push --strategy rolling
 
-      # ── 5. Print URL ────────────────────────────────────────────────────────
+      # ── 6. Print URL ────────────────────────────────────────────────────────
       - name: Show app URL
         run: cf app static-btp-app
