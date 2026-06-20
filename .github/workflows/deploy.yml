@@ -49,17 +49,19 @@ jobs:
       - name: Create XSUAA service
         run: |
           if cf service xsuaa-static-app > /dev/null 2>&1; then
-            echo "xsuaa-static-app already exists, skipping"
+            echo "xsuaa-static-app already exists — updating configuration"
+            cf update-service xsuaa-static-app -c xs-security.json
           else
+            echo "Creating xsuaa-static-app..."
             cf create-service xsuaa application xsuaa-static-app \
               -c xs-security.json
-            echo "Waiting for xsuaa-static-app to be ready..."
-            for i in $(seq 1 12); do
-              STATUS=$(cf service xsuaa-static-app | grep -i "status:" | awk '{print $2}')
-              echo "  status: $STATUS"
-              [ "$STATUS" = "succeeded" ] && break || sleep 10
-            done
           fi
+          echo "Waiting for xsuaa-static-app to be ready..."
+          for i in $(seq 1 18); do
+            STATUS=$(cf service xsuaa-static-app | grep -E "^\s+status:" | awk '{print $2}')
+            echo "  status: $STATUS"
+            [ "$STATUS" = "succeeded" ] && break || sleep 10
+          done
 
       # ── 5. Install App Router dependencies ─────────────────────────────────
       - name: Install App Router npm packages
