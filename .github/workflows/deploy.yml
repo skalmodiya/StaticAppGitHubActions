@@ -35,9 +35,10 @@ jobs:
           CF_SPACE: ${{ secrets.CF_SPACE }}
         run: |
           cf api "$CF_API"
-          mkdir -p ~/.cf
+          # CF CLI v8 on Linux stores config in ~/.config/cf/
+          mkdir -p ~/.config/cf
           printf '{"Target":"%s","AccessToken":"%s","RefreshToken":"","OrganizationFields":{"Name":"%s"},"SpaceFields":{"Name":"%s"}}' \
-            "$CF_API" "$CF_TOKEN" "$CF_ORG" "$CF_SPACE" > ~/.cf/config.json
+            "$CF_API" "$CF_TOKEN" "$CF_ORG" "$CF_SPACE" > ~/.config/cf/config.json
           cf target -o "$CF_ORG" -s "$CF_SPACE"
 
       # ── 4. Deploy ───────────────────────────────────────────────────────────
