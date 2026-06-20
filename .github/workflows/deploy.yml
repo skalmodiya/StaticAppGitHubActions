@@ -26,16 +26,7 @@ jobs:
           sudo mv /tmp/cf8 /usr/local/bin/cf
           cf version
 
-      # ── 3. Debug: find where CF CLI stores its config ───────────────────────
-      - name: Find CF config path
-        run: |
-          cf api https://dummy.example.com || true
-          echo "--- home is: $HOME"
-          find "$HOME" -name "config.json" 2>/dev/null | grep -i cf || echo "no cf config found"
-          ls -la "$HOME/.config/cf/" 2>/dev/null || echo "~/.config/cf/ does not exist"
-          ls -la "$HOME/.cf/" 2>/dev/null || echo "~/.cf/ does not exist"
-
-      # ── 4. Authenticate via CF config + fresh token (for SSO accounts) ─────
+      # ── 3. Authenticate via CF config + fresh token (for SSO accounts) ─────
       - name: Authenticate with SAP BTP
         env:
           CF_TOKEN:  ${{ secrets.CF_TOKEN }}
@@ -44,18 +35,47 @@ jobs:
           CF_SPACE:  ${{ secrets.CF_SPACE }}
         run: |
           CF_CONFIG_PATH=$(find "$HOME" -name "config.json" 2>/dev/null | grep -i cf | head -1)
-          echo "CF config path: $CF_CONFIG_PATH"
-          mkdir -p "$(dirname "$CF_CONFIG_PATH")"
+          if [ -z "$CF_CONFIG_PATH" ]; then
+            mkdir -p "$HOME/.cf"
+            CF_CONFIG_PATH="$HOME/.cf/config.json"
+          fi
           echo "$CF_CONFIG" > "$CF_CONFIG_PATH"
           jq --arg token "$CF_TOKEN" '.AccessToken = $token' "$CF_CONFIG_PATH" \
             > /tmp/cf_config_patched.json
           mv /tmp/cf_config_patched.json "$CF_CONFIG_PATH"
           cf target -o "$CF_ORG" -s "$CF_SPACE"
 
-      # ── 5. Deploy ───────────────────────────────────────────────────────────
+      # ── 4. Create XSUAA service (skips if already exists) ──────────────────
+      - name: Create XSUAA service
+        run: |
+          if cf service xsuaa-static-app > /dev/null 2>&1; then
+            echo "xsuaa-static-app already exists, skipping"
+          else
+            cf create-service xsuaa application xsuaa-static-app \
+              -c xs-security.json
+            echo "Waiting for xsuaa-static-app to be ready..."
+            for i in $(seq 1 12); do
+              STATUS=$(cf service xsuaa-static-app | grep -i "status:" | awk '{print $2}')
+              echo "  status: $STATUS"
+              [ "$STATUS" = "succeeded" ] && break || sleep 10
+            done
+          fi
+
+      # ── 5. Install App Router dependencies ─────────────────────────────────
+      - name: Install App Router npm packages
+        working-directory: approuter
+        run: npm install --omit=dev
+
+      # ── 6. Deploy static app (no public route) ─────────────────────────────
       - name: Deploy static app
+        working-directory: static-app
         run: cf push --strategy rolling
 
-      # ── 6. Print URL ────────────────────────────────────────────────────────
-      - name: Show app URL
-        run: cf app static-btp-app
+      # ── 7. Deploy App Router ────────────────────────────────────────────────
+      - name: Deploy App Router
+        working-directory: approuter
+        run: cf push --strategy rolling
+
+      # ── 8. Print App Router URL ─────────────────────────────────────────────
+      - name: Show App Router URL
+        run: cf app static-btp-approuter

@@ -1,0 +1,10 @@
+{
+  "name": "approuter-static-app",
+  "description": "App Router for static BTP app",
+  "dependencies": {
+    "@sap/approuter": "^16"
+  },
+  "scripts": {
+    "start": "node node_modules/@sap/approuter/approuter.js"
+  }
+}

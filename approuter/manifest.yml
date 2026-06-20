@@ -1,0 +1,20 @@
+---
+applications:
+  - name: static-btp-approuter
+    memory: 128M
+    disk_quota: 256M
+    instances: 1
+    buildpacks:
+      - nodejs_buildpack
+    path: .
+    env:
+      destinations: >
+        [
+          {
+            "name": "static-btp-app-dest",
+            "url": "https://static-btp-app.cfapps.us10-001.hana.ondemand.com",
+            "forwardAuthToken": true
+          }
+        ]
+    services:
+      - xsuaa-static-app

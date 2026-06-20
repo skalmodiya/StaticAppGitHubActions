@@ -7,3 +7,6 @@ applications:
     buildpacks:
       - staticfile_buildpack
     path: .
+    no-route: true          # no public URL — only reachable via App Router
+    services:
+      - xsuaa-static-app

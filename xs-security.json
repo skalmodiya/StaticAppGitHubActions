@@ -1,0 +1,7 @@
+{
+  "xsappname": "static-btp-app",
+  "tenant-mode": "dedicated",
+  "description": "Security descriptor for static BTP app",
+  "scopes": [],
+  "role-templates": []
+}
